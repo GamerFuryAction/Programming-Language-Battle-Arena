@@ -258,4 +258,123 @@ class Battle:
         self.last_prompt = chosen[0]
         return chosen
 
-    def check_code(self, player_code: str, valid_answers: list[str]) -> bool
+    def check_code(self, player_code: str, valid_answers: list[str]) -> bool:
+        normalized_player = normalize_code(player_code)
+        return any(normalized_player == normalize_code(ans) for ans in valid_answers)
+
+    def start(self) -> bool:
+        game_library.bubble.boxed_print(
+            f"BOSS FIGHT: {self.boss.name}\n"
+            f"Difficulty: {self.difficulty}\n\n"
+            f"{self.boss.intro}"
+        )
+        time.sleep(2.5)
+
+        while self.boss.hp > 0 and any(f.hp > 0 for f in self.fighters.values()):
+            self.turn += 1
+
+            if self.active_fighter.hp <= 0:
+                game_library.bubble.boxed_print(
+                    f"{self.active_fighter.name} suffered a Runtime Crash (0 HP)!\n"
+                    f"Select another language fighter to stay in the fight!"
+                )
+                time.sleep(2)
+                self.active_fighter = self.choose_fighter()
+
+            prompt, valid_answers = self.get_challenge(self.active_fighter)
+
+            # Warn player if the boss is charging its special attack (every 3rd turn on Normal+)
+            special_warning = ""
+            if self.boss.special_name and self.turn % 3 == 0:
+                special_warning = f"\nWARNING: {self.boss.name} is charging {self.boss.special_name}!"
+
+            arena_ui = (
+                f"TURN {self.turn} | BOSS: {self.boss.name}\n"
+                f"{render_hp_bar(self.boss.hp, self.boss.max_hp)}{special_warning}\n\n"
+                f"FIGHTER: {self.active_fighter.name} (Player: {self.player_name})\n"
+                f"{render_hp_bar(self.active_fighter.hp, self.active_fighter.max_hp)} | Heals: {self.heals_left} | Combo: {self.combo}x\n\n"
+                f"[{self.active_fighter.name} CHALLENGE]\n"
+                f"{prompt}\n\n"
+                f"Commands: write code to attack | 'heal' (+35 HP) | 'switch' (change language)"
+            )
+
+            player_code = game_library.bubble.boxed_input(arena_ui, prompt_label="Code> ").strip()
+
+            if player_code.lower() == "heal":
+                if self.heals_left > 0:
+                    self.heals_left -= 1
+                    healed = min(35, self.active_fighter.max_hp - self.active_fighter.hp)
+                    self.active_fighter.hp += healed
+                    game_library.bubble.boxed_print(
+                        f"garbage_collect() freed memory!\n"
+                        f"{self.active_fighter.name} restored +{healed} HP!"
+                    )
+                else:
+                    game_library.bubble.boxed_print("Out of memory heals! You lost your turn!")
+                time.sleep(1.8)
+
+            elif player_code.lower() == "switch":
+                self.active_fighter = self.choose_fighter()
+                self.turn -= 1  # Switching doesn't advance the boss special timer
+                continue
+
+            elif self.check_code(player_code, valid_answers):
+                self.combo += 1
+                crit = random.random() < 0.25
+                combo_bonus = (self.combo - 1) * 3
+                dmg = int((self.active_fighter.base_damage + combo_bonus) * (1.5 if crit else 1.0))
+                self.boss.hp = max(0, self.boss.hp - dmg)
+
+                header = "CRITICAL HIT! O(1) Execution!" if crit else "Compiled cleanly!"
+                game_library.bubble.boxed_print(
+                    f"{header}\n"
+                    f"Combo: {self.combo}x (+{combo_bonus} bonus)\n"
+                    f"{self.active_fighter.name} dealt {dmg} damage to {self.boss.name}!"
+                )
+                time.sleep(2)
+
+                if self.boss.hp <= 0:
+                    break
+
+            else:
+                self.combo = 0
+                game_library.bubble.boxed_print(
+                    f"SyntaxError! Compilation failed (Combo reset)!\n"
+                    f"Valid example: {valid_answers[0]}\n\n"
+                    f"0 damage dealt!"
+                )
+                time.sleep(2.5)
+
+            # Boss counter-attack (Special attack triggers every 3 turns on Normal+ difficulties)
+            boss_dmg = random.randint(self.boss.min_damage, self.boss.max_damage)
+            if self.boss.special_name and self.turn % 3 == 0:
+                boss_dmg += 10
+                self.combo = 0
+                self.active_fighter.hp = max(0, self.active_fighter.hp - boss_dmg)
+                game_library.bubble.boxed_print(
+                    f"SPECIAL ATTACK: {self.boss.special_name}!\n"
+                    f"{self.boss.special_desc}\n\n"
+                    f"{self.active_fighter.name} took {boss_dmg} damage!"
+                )
+            else:
+                self.active_fighter.hp = max(0, self.active_fighter.hp - boss_dmg)
+                game_library.bubble.boxed_print(
+                    f"{self.boss.name} counter-attacks with an Unhandled Exception!\n"
+                    f"{self.active_fighter.name} took {boss_dmg} damage!"
+                )
+            time.sleep(2.2)
+
+        if self.boss.hp <= 0:
+            game_library.bubble.boxed_print(
+                f"VICTORY!\n\n"
+                f"{self.player_name} and {self.active_fighter.name} defeated {self.boss.name}!"
+            )
+            time.sleep(2.5)
+            return True
+
+        game_library.bubble.boxed_print(
+            f"GAME OVER — SEGMENTATION FAULT\n\n"
+            f"All your programming languages crashed against {self.boss.name}."
+        )
+        time.sleep(2.5)
+        return False
