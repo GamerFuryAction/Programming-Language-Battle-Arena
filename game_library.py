@@ -90,6 +90,7 @@ class bubble:
         return ''
 
     def boxed_multiselect(message, options, width=69, indent=4):
+        os.system('cls' if os.name == 'nt' else 'clear')
         border = "|" + "-" * (width - 2) + "|"
         pad = " " * indent
         max_text_width = width - (indent * 2)
@@ -133,7 +134,7 @@ class bubble:
                 print(border)
                 sys.stdout.flush()
 
-                key = _get_key()
+                key = bubble._get_key()
                 if key == 'UP':
                     cursor = (cursor - 1) % len(options)
                 elif key == 'DOWN':

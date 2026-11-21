@@ -1,62 +1,68 @@
-import os
 import sys
-import game_library
 import time
+import game_library
+import boss_fight
 
-place_holder = "test"
 
 class Game:
-    def select_boss():
-        bosses = ["Easy Level", "Normal Level", "Hard Level", "Expert Level", "Master Level", "Append Level"]
-        #player_name = game_library.Player(name=player_name)
+    def __init__(self):
+        self.start_game()
+        while True:
+            difficulty = self.select_boss()
+            fight = boss_fight.Battle(game_library.player, difficulty)
+            fight.start()
 
-        game_library.bubble.boxed_print(f"""Welcome {game_library.player}!
-        Please enjoy this game, its made with pure heart""")
-        time.sleep(3)
+            again = game_library.bubble.boxed_multiselect(
+                "Challenge another boss in the Arena?",
+                ["Yes, fight again", "No, exit game"],
+            )
+            if again.startswith("No"):
+                game_library.bubble.boxed_print("Thanks for playing Programming Language Battle Arena!")
+                break
 
-        while boss_answer != "Easy Level" and boss_answer != "Normal Level" and boss_answer != "Hard Level" and boss_answer != "Expert Level" and boss_answer != "Master Level" and boss_answer != "Append Level":
-            boss_answer = game_library.bubble.boxed_input(f"""Ok, so there are 6 dificulties of the game:
-                    {bosses}
+    def select_boss(self):
+        bosses = [
+            "Easy Level",
+            "Normal Level",
+            "Hard Level",
+            "Expert Level",
+            "Master Level",
+            "Append Level",
+        ]
 
-                    Please select the boss:""")
-        return boss_answer
+        game_library.bubble.boxed_print(
+            f"Welcome {game_library.player}!\n"
+            f"Please enjoy this game, its made with pure heart"
+        )
+        time.sleep(2)
 
-    def Start_Game():
-        # first prompt/the start of the game
-        answer = game_library.bubble.boxed_input("""Hello and welcome to the Programming Language Battle Arena!
+        return game_library.bubble.boxed_multiselect(
+            "Select the boss difficulty (UP/DOWN arrows + ENTER):",
+            bosses,
+        )
 
-        Here you will be challenging all the unbeatable champions, with the help from the legendary C++ and C to the new ones like Python and HTML.
+    def start_game(self):
+        answer = game_library.bubble.boxed_input(
+            "Hello and welcome to the Programming Language Battle Arena!\n\n"
+            "Here you will be challenging all the unbeatable champions, with the help from the legendary C++ and C to the new ones like Python and HTML.\n\n"
+            "Will you be able to fight them all?\n"
+            "Yes(Y) / No(n)"
+        )
 
-        Will you be able to fight them all?
-        Yes(Y) / No(n)""")
-        while answer != "y" or answer != "Y" or answer != "n" or answer != "N":
-            if answer == "Y" or answer == "y":
-                # asking them for their name
-                game_library.player = game_library.bubble.boxed_input("""Good! Then...    
-                What is your name player?""")
+        while True:
+            choice = answer.strip().lower()
+            if choice == "y":
+                game_library.player = game_library.bubble.boxed_input(
+                    "Good! Then...\n"
+                    "What is your name player?"
+                ).strip()
                 return game_library.player
-            elif answer == "n" or answer == "N":
-                game_library.bubble.boxed_print("""Ok then, see you soon traveler!""")
+            elif choice == "n":
+                game_library.bubble.boxed_print("Ok then, see you soon traveler!")
                 sys.exit()
-
             else:
-                answer = game_library.bubble.boxed_input("""I didn't understand it quite.
-                Could you answer again?
-
-                Yes(Y) / No(n)""")
-
-
-    Start_Game()
-    answer = select_boss()
-    if answer == "Easy Level":
-        print("Easy Level")
-    elif answer == "Normal Level":
-        print("Normal Level")
-    elif answer == "Hard Level":
-        print("Hard Level")
-    elif answer == "Expert Level":
-        print("Expert Level")
-    elif answer == "Master Level":
-        print("Master Level")
-    elif answer == "Append Level":
-        print("Append Level")
+                answer = game_library.bubble.boxed_input(
+                    "I didn't understand it quite.\n"
+                    "Could you answer again?\n\n"
+                    "Yes(Y) / No(n)"
+                )
