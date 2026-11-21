@@ -152,7 +152,5 @@ class bubble:
         # Return the selected items in their original order
         return [options[i] for i in sorted(selected)]
 
-@dataclass
-class Player:
-    name: str
+player = "place_holder"
     
